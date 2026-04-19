@@ -4,6 +4,9 @@ const createProduct = async (req, res) => {
         if (!name || !price || !category || !description) {
             return res.status(400).json({ message: "All fields required" })
         }
+        if (isNaN(price) || price <= 0) {
+    return res.status(400).json({ message: "Invalid price" });
+}
         const product = await productModel.create({
             name,
             price,
@@ -74,10 +77,70 @@ const deleteProduct=async (req,res) => {
     
 }
 
+
+
+const filterProduct = async (req, res) => {
+    try {
+        const {
+            name,
+            category,
+            minPrice,
+            maxPrice,
+            sort,
+            page = 1,
+            limit = 10,
+        } = req.query
+
+        let query = {}
+
+        if (name) {
+            query.name = { $regex: name, $options: "i" }
+        }
+
+        if (category) {
+            query.category = category
+        }
+
+        if (minPrice || maxPrice) {
+            query.price = {}
+            if (minPrice) query.price.$gte = Number(minPrice)
+            if (maxPrice) query.price.$lte = Number(maxPrice)
+        }
+
+        let productsQuery = productModel.find(query)
+
+        if (sort === "price_asc") {
+            productsQuery = productsQuery.sort({ price: 1 })
+        } else if (sort === "price_desc") {
+            productsQuery = productsQuery.sort({ price: -1 })
+        }
+
+        const pageNumber = Number(page)
+        const limitNumber = Number(limit)
+
+        const skip = (pageNumber - 1) * limitNumber
+
+        productsQuery = productsQuery
+            .skip(skip)
+            .limit(limitNumber)
+
+        const products = await productsQuery
+
+        res.status(200).json({
+            message: "Filtered products",
+            count: products.length,
+            products
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+};
+
 export {
     createProduct,
     getAllProduct,
     getSingleProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,filterProduct
 }
