@@ -12,8 +12,8 @@ import {
 const orderrouter = express.Router();
 
 
-orderrouter.post("/", authMiddleware, createOrder);
-orderrouter.get("/my", authMiddleware, getMyOrders);
+orderrouter.post("/", authMiddleware,roleMiddleware("user"), createOrder);
+orderrouter.get("/my", authMiddleware,roleMiddleware("user"), getMyOrders);
 
 
 orderrouter.get("/", authMiddleware, roleMiddleware("admin"), getAllOrders);

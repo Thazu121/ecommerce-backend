@@ -14,7 +14,7 @@ app.use('/auth',authrouter)
 app.use('/user',userrouter)
 app.use("/products",productrouter)
 app.use("/order",orderrouter)
-app.use(errorHandler);
+app.use(errorHandler)
 
 
 

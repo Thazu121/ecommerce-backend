@@ -12,7 +12,7 @@ import {
 
 const productrouter = express.Router()
 
-productrouter.get("/filter/search", filterProduct)
+productrouter.get("/filter", filterProduct)
 productrouter.get("/", getAllProduct)
 productrouter.get("/:productId", getSingleProduct)
 

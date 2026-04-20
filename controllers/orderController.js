@@ -4,6 +4,9 @@ import { productModel } from "../models/productModel.js";
 
 const createOrder = async (req, res, next) => {
     try {
+        if (req.user.role !== "user") {
+    return res.status(403).json({ message: "Only users can place orders" })
+}
         const { products } = req.body
 
         if (!products || !Array.isArray(products) || products.length === 0) {

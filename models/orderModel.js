@@ -4,7 +4,7 @@ const orderSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users", // must match user model name
+      ref: "users", 
       required: true,
     },
 
@@ -12,7 +12,7 @@ const orderSchema = new mongoose.Schema(
       {
         productId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Product", // must match product model name
+          ref: "Product",
           required: true,
         },
         quantity: {
