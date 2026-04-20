@@ -1,4 +1,4 @@
-const createProduct = async (req, res) => {
+const createProduct = async (req, res,next) => {
     try {
         const { name, price, category, description } = req.body
         if (!name || !price || !category || !description) {
@@ -13,40 +13,39 @@ const createProduct = async (req, res) => {
             category,
             description
         })
-        return res.status(201).json({ message: "Product created ", product })
+        return res.status(201).json({ message: "Product created successfully ", product })
 
 
     } catch (error) {
-        res.status(500).json({ message: "server error" })
+        next(error)
     }
 }
 
 
 
-const getAllProduct = async (req, res) => {
+const getAllProduct = async (req, res,next) => {
     try {
         const product = await productModel.find()
-        return res.status(200).json({ message: "Product find", product: product })
+        return res.status(200).json({ message: "Product fetched successfully", product })
     } catch (error) {
-        res.status(500).json({ message: "server error" })
+        next(error)
     }
 }
-const getSingleProduct = async (req, res) => {
+const getSingleProduct = async (req, res,next) => {
     try {
         const product = await productModel.findById(req.params.productId)
         if (!product) {
           return  res.status(404).json({ message: "Product Not Found" })
         }
-         res.status(200).json({ message: "Product Found", product: product })
+         res.status(200).json({ message: "Product Found", product })
 
     } catch (error) {
-        res.status(500).json({ message: "server error" })
-
+next(error)
     }
 
 }
 
-const updateProduct=async (req,res) => {
+const updateProduct=async (req,res,next) => {
     try {
 const product=await productModel.findByIdAndUpdate(req.params.productId
     ,{$set:req.body},
@@ -58,12 +57,11 @@ if(!product){
 }
 res.status(200).json({message:"product updated",product})
     } catch (error) {
-                res.status(500).json({ message: "server error" })
-
+next(error)
     }
     
 }
-const deleteProduct=async (req,res) => {
+const deleteProduct=async (req,res,next) => {
     try {
         const product=await productModel.findByIdAndDelete(req.params.productId)
         if (!product){
@@ -71,15 +69,14 @@ const deleteProduct=async (req,res) => {
         }
         res.status(200).json({message:"Deleted sucessfully",product})
     } catch (error) {
-                        res.status(500).json({ message: "server error" })
-
+next(error)
     }
     
 }
 
 
 
-const filterProduct = async (req, res) => {
+const filterProduct = async (req, res,next) => {
     try {
         const {
             name,
@@ -133,9 +130,9 @@ const filterProduct = async (req, res) => {
         });
 
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        next(error)
     }
-};
+}
 
 export {
     createProduct,

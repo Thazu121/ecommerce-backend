@@ -2,43 +2,47 @@ import { userModel } from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 
 
-const getProfile = async (req, res) => {
+const getProfile = async (req, res, next) => {
     try {
-        const userId = req.user.id
+        const user = await userModel
+            .findById(req.user.id)
+            .select("-password")
 
-        const user = await userModel.findById(userId)
-
-        if (!user) {
-            return res.status(404).json({ message: "User not found" })
+          if (!user) {
+            const err = new Error("User not found")
+            err.statusCode = 404
+            throw err
         }
 
-        const userResponse = user.toObject()
-        delete userResponse.password
-
-        res.status(200).json({
+        return res.status(200).json({
             message: "User profile",
-            user: userResponse
-        });
+            user
+        })
 
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        next(error)
     }
 };
 
 
-const updateProfile = async (req, res) => {
+const updateProfile = async (req, res, next) => {
     try {
-        const userId = req.user.id;
-        const { name, password } = req.body;
+        const { name, password } = req.body
 
-        const user = await userModel.findById(userId);
+        const user = await userModel.findById(req.user.id)
 
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
+           if (!user) {
+            const err = new Error("User not found")
+            err.statusCode = 404
+            throw err
         }
 
+
         if (name) {
-            user.name = name
+            if (name.trim().length === 0) {
+                return res.status(400).json({ message: "Name cannot be empty" })
+            }
+            user.name = name.trim();
         }
 
         if (password) {
@@ -49,21 +53,20 @@ const updateProfile = async (req, res) => {
             }
 
             const hashedPassword = await bcrypt.hash(password, 10)
-            user.password = hashedPassword;
+            user.password = hashedPassword
         }
 
         await user.save()
 
-        const userResponse = user.toObject()
-        delete userResponse.password
+        user.password = undefined;
 
-        res.status(200).json({
+        return res.status(200).json({
             message: "Profile updated successfully",
-            user: userResponse
-        })
+            user
+        });
 
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        next(error);
     }
 };
 
@@ -71,4 +74,4 @@ const updateProfile = async (req, res) => {
 export {
     getProfile,
     updateProfile
-};
+}

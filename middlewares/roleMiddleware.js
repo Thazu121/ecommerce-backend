@@ -1,13 +1,17 @@
 export const roleMiddleware = (...roles) => {
     return (req, res, next) => {
-        const userRole = req.user?.role || "guest";
 
-        if (!roles.includes(userRole)) {
-            return res.status(403).json({
-                message: "Access denied"
-            });
+        if (!req.user) {
+            if (!roles.includes("guest")) {
+                return res.status(401).json({ message: "Unauthorized" })
+            }
+            return next()
         }
 
-        next();
-    };
-};
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ message: "Access denied" })
+        }
+
+        next()
+    }
+}

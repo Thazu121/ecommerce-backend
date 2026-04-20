@@ -1,24 +1,23 @@
 import jwt from "jsonwebtoken";
 
 export const authMiddleware = (req, res, next) => {
-    const authHeader = req.headers.authorization
+    const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ message: "Unauthorized User" })
+        return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const token = authHeader.split(" ")[1]
+    const token = authHeader.split(" ")[1];
 
     if (!process.env.JWT_SECRET) {
-        throw new Error("JWT_SECRET not defined");
+        return res.status(500).json({ message: "Server configuration error" });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({ message: "Forbidden" })
-        }
-
-        req.user = user
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
         next();
-    });
+    } catch (err) {
+        return res.status(403).json({ message: "Forbidden" });
+    }
 };

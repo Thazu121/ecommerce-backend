@@ -4,7 +4,7 @@ const orderSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user",   
+      ref: "users", // must match user model name
       required: true,
     },
 
@@ -12,13 +12,14 @@ const orderSchema = new mongoose.Schema(
       {
         productId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "product", 
+          ref: "Product", // must match product model name
           required: true,
         },
         quantity: {
           type: Number,
           required: true,
           default: 1,
+          min: 1,
         },
       },
     ],
@@ -26,15 +27,16 @@ const orderSchema = new mongoose.Schema(
     totalPrice: {
       type: Number,
       required: true,
+      min: 0,
     },
 
     status: {
       type: String,
-      enum: ["pending", "completed", "cancelled"],
+      enum: ["pending", "shipped", "delivered"],
       default: "pending",
     },
   },
   { timestamps: true }
 );
 
-export const orderModel = mongoose.model("order", orderSchema);
+export const orderModel = mongoose.model("Order", orderSchema);

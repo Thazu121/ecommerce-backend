@@ -25,26 +25,13 @@ const productSchema = new mongoose.Schema(
       required: true
     },
 
-    rating: {
-      type: Number,
-      default: 0
-    },
 
-    numReviews: {
-      type: Number,
-      default: 0
-    },
-
-    stock: {
-      type: Number,
-      default: 0
-    }
   },
   { timestamps: true }
 );
 
-productSchema.index({ name: "text", description: "text" });
+productSchema.index({ name: "text", description: "text" })
 
-productSchema.index({ category: 1, price: 1 });
+productSchema.index({ category: 1, price: 1 })
 
 export const productModel = mongoose.model("Product", productSchema);
