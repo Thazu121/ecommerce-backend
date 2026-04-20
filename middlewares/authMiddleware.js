@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-export const authMiddleware = (req, res, next) => {
+const authMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -20,4 +20,5 @@ export const authMiddleware = (req, res, next) => {
     } catch (err) {
         return res.status(403).json({ message: "Forbidden" });
     }
-};
+}
+export default authMiddleware
