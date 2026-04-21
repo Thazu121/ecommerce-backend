@@ -8,13 +8,13 @@ import {
   updateProfile
 } from "../controllers/userProfileController.js"
 
-const userrouter = express.Router()
+const userRouter = express.Router()
 
 
 
 
-userrouter.get("/profile", authMiddleware, getProfile)
-userrouter.put("/profile", authMiddleware, updateProfile)
+userRouter.get("/profile", authMiddleware, getProfile)
+userRouter.put("/profile", authMiddleware, updateProfile)
 
 
-export default userrouter;
+export default userRouter;

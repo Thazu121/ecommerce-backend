@@ -1,37 +1,47 @@
-// import { userModel } from "../models/userModel.js";
-// import { productModel } from "../models/productModel.js";
-// import { orderModel } from "../models/orderModel.js";
+import { productModel } from "../models/productModel.js";
+import { orderModel } from "../models/orderModel.js";
 
-// const getAnalytics = async (req, res) => {
-//     try {
-//         const totalUsers = await userModel.countDocuments();
+const getRecommendedProducts = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
 
-//         const totalProducts = await productModel.countDocuments();
+        const orders = await orderModel
+            .find({ user: userId })
+            .populate("products.productId");
 
-//         const totalOrders = await orderModel.countDocuments();
+        if (!orders.length) {
+            const products = await productModel.find().limit(5);
 
-//         const revenueData = await orderModel.aggregate([
-//             {
-//                 $group: {
-//                     _id: null,
-//                     totalRevenue: { $sum: "$totalPrice" }
-//                 }
-//             }
-//         ]);
+            return res.status(200).json({
+                message: "No orders found, showing random products",
+                products
+            });
+        }
 
-//         const totalRevenue = revenueData.length > 0 ? revenueData[0].totalRevenue : 0;
+        let categories = [];
 
-//         res.status(200).json({
-//             message: "Analytics data",
-//             totalUsers,
-//             totalProducts,
-//             totalOrders,
-//             totalRevenue
-//         });
+        orders.forEach(order => {
+            order.products.forEach(item => {
+                if (item.productId?.category) {
+                    categories.push(item.productId.category);
+                }
+            });
+        });
 
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// };
+        categories = [...new Set(categories)];
 
-// export { getAnalytics };
+        const recommendedProducts = await productModel.find({
+            category: { $in: categories }
+        }).limit(5);
+
+        return res.status(200).json({
+            message: "Recommended products",
+            products: recommendedProducts
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+export { getRecommendedProducts }

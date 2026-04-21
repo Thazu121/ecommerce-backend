@@ -1,27 +1,44 @@
 import { productModel } from "../models/productModel.js"
 
-const createProduct = async (req, res,next) => {
+const createProduct = async (req, res, next) => {
     try {
-        const { name, price, category, description } = req.body
+        let { name, price, category, description } = req.body;
+
         if (!name || !price || !category || !description) {
-            return res.status(400).json({ message: "All fields required" })
+            return res.status(400).json({ message: "All fields required" });
         }
+
         if (isNaN(price) || price <= 0) {
-    return res.status(400).json({ message: "Invalid price" });
-}
+            return res.status(400).json({ message: "Invalid price" });
+        }
+
+        name = name.trim().toLowerCase();
+        category = category.trim().toLowerCase();
+
+        const existingProduct = await productModel.findOne({ name, category });
+
+        if (existingProduct) {
+            return res.status(400).json({
+                message: "Product already exists"
+            });
+        }
+
         const product = await productModel.create({
             name,
             price,
             category,
             description
-        })
-        return res.status(201).json({ message: "Product created successfully ", product })
+        });
 
+        return res.status(201).json({
+            message: "Product created successfully",
+            product
+        });
 
     } catch (error) {
-        next(error)
+        next(error);
     }
-}
+};
 
 
 
@@ -47,21 +64,39 @@ next(error)
 
 }
 
-const updateProduct=async (req,res,next) => {
+const updateProduct = async (req, res, next) => {
     try {
-const product=await productModel.findByIdAndUpdate(req.params.productId
-    ,{$set:req.body},
-    {new:true}
-)
-    
-if(!product){
-    return res.status(404).json({message:"Product  not Found"})
-}
-res.status(200).json({message:"product updated",product})
+        const { name, category } = req.body;
+
+        if (name && category) {
+            const existingProduct = await productModel.findOne({
+                name: name.trim().toLowerCase(),
+                category: category.trim().toLowerCase(),
+                _id: { $ne: req.params.productId }
+            });
+
+            if (existingProduct) {
+                return res.status(400).json({
+                    message: "Another product with same name and category exists"
+                });
+            }
+        }
+
+        const product = await productModel.findByIdAndUpdate(
+            req.params.productId,
+            { $set: req.body },
+            { new: true, runValidators: true }
+        );
+
+        if (!product) {
+            return res.status(404).json({ message: "Product not found" });
+        }
+
+        res.status(200).json({ message: "Product updated", product });
+
     } catch (error) {
-next(error)
+        next(error);
     }
-    
 }
 const deleteProduct=async (req,res,next) => {
     try {

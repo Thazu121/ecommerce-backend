@@ -5,13 +5,13 @@ import { loginUser, registerUser } from "../controllers/authentication.js";
 
 
 
-const authrouter = express.Router()
+const authRouter = express.Router()
 
 
 
-authrouter.post("/register",registerUser)
-authrouter.post("/login", loginUser);
+authRouter.post("/register",registerUser)
+authRouter.post("/login", loginUser);
 
 
 
-export default authrouter;
+export default authRouter;

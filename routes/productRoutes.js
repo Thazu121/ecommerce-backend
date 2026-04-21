@@ -10,14 +10,14 @@ import {
   filterProduct
 } from "../controllers/productController.js";
 
-const productrouter = express.Router()
+const productRouter = express.Router()
 
-productrouter.get("/filter", filterProduct)
-productrouter.get("/", getAllProduct)
-productrouter.get("/:productId", getSingleProduct)
+productRouter.get("/filter", filterProduct)
+productRouter.get("/", getAllProduct)
+productRouter.get("/:productId", getSingleProduct)
 
-productrouter.post("/", authMiddleware, roleMiddleware("admin"), createProduct)
-productrouter.put("/:productId", authMiddleware, roleMiddleware("admin"), updateProduct)
-productrouter.delete("/:productId", authMiddleware, roleMiddleware("admin"), deleteProduct);
+productRouter.post("/", authMiddleware, roleMiddleware("admin"), createProduct)
+productRouter.put("/:productId", authMiddleware, roleMiddleware("admin"), updateProduct)
+productRouter.delete("/:productId", authMiddleware, roleMiddleware("admin"), deleteProduct);
 
-export default productrouter;
+export default productRouter;
