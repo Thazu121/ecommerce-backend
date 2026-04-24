@@ -24,7 +24,7 @@ const getProfile = async (req, res, next) => {
 };
 const updateProfile = async (req, res, next) => {
     try {
-        const { name, password } = req.body;
+        const { name, email, phone, address, password } = req.body;
 
         const user = await userModel.findById(req.user.id);
 
@@ -41,6 +41,45 @@ const updateProfile = async (req, res, next) => {
                 return next(err);
             }
             user.name = name.trim();
+        }
+
+        if (email) {
+            const emailLower = email.toLowerCase().trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailRegex.test(emailLower)) {
+                const err = new Error("Invalid email");
+                err.statusCode = 400;
+                return next(err);
+            }
+
+            const existingUser = await userModel.findOne({ email: emailLower });
+
+            if (existingUser && existingUser._id.toString() !== req.user.id) {
+                const err = new Error("Email already in use");
+                err.statusCode = 400;
+                return next(err);
+            }
+
+            user.email = emailLower;
+        }
+
+        if (phone) {
+            const phoneRegex = /^[0-9]{10}$/;
+            if (!phoneRegex.test(phone)) {
+                const err = new Error("Invalid phone number");
+                err.statusCode = 400;
+                return next(err);
+            }
+            user.phone = phone;
+        }
+
+        if (address) {
+            user.address = {
+                street: address.street || user.address.street,
+                city: address.city || user.address.city,
+                pincode: address.pincode || user.address.pincode
+            };
         }
 
         if (password) {
@@ -67,6 +106,7 @@ const updateProfile = async (req, res, next) => {
         next(error);
     }
 };
+
 
 export {
     getProfile,
