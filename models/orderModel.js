@@ -4,22 +4,41 @@ const orderSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "users", 
+      ref: "users",
       required: true,
     },
 
     products: [
       {
         productId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
+          type: String,
           required: true,
         },
-        quantity: {
+
+        source: {
+          type: String,
+          enum: ["fake", "mongo"],
+          required: true,
+        },
+
+        title: {
+          type: String,
+          required: true,
+        },
+
+        image: {
+          type: String,
+          default: "",
+        },
+
+        price: {
           type: Number,
           required: true,
+        },
+
+        quantity: {
+          type: Number,
           default: 1,
-          min: 1,
         },
       },
     ],
@@ -27,7 +46,6 @@ const orderSchema = new mongoose.Schema(
     totalPrice: {
       type: Number,
       required: true,
-      min: 0,
     },
 
     status: {

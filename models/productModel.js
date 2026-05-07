@@ -5,33 +5,38 @@ const productSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     price: {
       type: Number,
       required: true,
-      min: 0
+      min: 0,
     },
 
     category: {
       type: String,
       required: true,
-      index: true
+      index: true,
     },
 
     description: {
       type: String,
-      required: true
+      required: true,
     },
 
+    image: {
+      type: String,
+      default: "",
+    },
 
+    // ✅ NEW FIELD (IMPORTANT)
+    isPublic: {
+      type: Boolean,
+      default: true, // public by default
+    },
   },
   { timestamps: true }
 );
-
-productSchema.index({ name: "text", description: "text" })
-
-productSchema.index({ category: 1, price: 1 })
 
 export const productModel = mongoose.model("Product", productSchema);
