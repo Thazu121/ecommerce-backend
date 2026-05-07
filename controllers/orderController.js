@@ -1,129 +1,152 @@
 import { orderModel } from "../models/orderModel.js";
-import { productModel } from "../models/productModel.js";
 
 
-const createOrder = async (req, res, next) => {
-    try {
-        if (req.user.role !== "user") {
-    return res.status(403).json({ message: "Only users can place orders" })
-}
-        const { products } = req.body
-
-        if (!products || !Array.isArray(products) || products.length === 0) {
-            return res.status(400).json({ message: "Products are required" })
-        }
-
-        let totalPrice = 0;
-
-        for (let item of products) {
-            const { productId, quantity } = item;
-
-            if (!productId) {
-                return res.status(400).json({ message: "Product ID is required" });
-            }
-
-            if (!quantity || quantity <= 0) {
-                return res.status(400).json({ message: "Invalid quantity" });
-            }
-
-            const product = await productModel.findById(productId);
-
-            if (!product) {
-                return res.status(404).json({ message: "Product not found" });
-            }
-
-            totalPrice += product.price * quantity;
-        }
-
-        const order = await orderModel.create({
-            user: req.user.id,
-            products,
-            totalPrice,
-        });
-
-        return res.status(201).json({
-            message: "Order created successfully",
-            order,
-        });
-
-    } catch (error) {
-        next(error);
+const createOrder = async (req, res) => {
+  try {
+    if (req.user.role !== "user") {
+      return res.status(403).json({ message: "Only users can place orders" });
     }
+
+    const { products } = req.body;
+
+    if (!Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({ message: "Products required" });
+    }
+
+    let totalPrice = 0;
+
+    const safeProducts = products.map((item) => {
+      if (!item.productId || !item.price) {
+        throw new Error("Invalid product data");
+      }
+
+      totalPrice += item.price * item.quantity;
+
+      return {
+        productId: String(item.productId),
+        source: item.source || "mongo", // ✅ FIX IMPORTANT
+        title: item.title,
+        image: item.image || "",
+        price: Number(item.price),
+        quantity: Number(item.quantity || 1),
+      };
+    });
+
+    const order = await orderModel.create({
+      user: req.user.id,
+      products: safeProducts,
+      totalPrice,
+      status: "pending",
+    });
+
+    res.status(201).json({
+      success: true,
+      order,
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
-
+// ==============================
+// GET MY ORDERS
+// ==============================
 const getMyOrders = async (req, res, next) => {
-    try {
-        const userId = req.user.id;
+  try {
 
-        const orders = await orderModel
-            .find({ user: userId })
-            .populate("products.productId")
-            .populate("user", "name email");
+    const orders = await orderModel.find({
+      user: req.user.id,
+    });
 
-        return res.status(200).json({
-            message: "My orders",
-            orders,
-        });
+    return res.status(200).json({
+      success: true,
+      orders,
+    });
 
-    } catch (error) {
-        next(error);
-    }
+  } catch (error) {
+
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
 };
 
 
+// ==============================
+// GET ALL ORDERS
+// ==============================
 const getAllOrders = async (req, res, next) => {
-    try {
-        const orders = await orderModel
-            .find()
-            .populate("products.productId")
-            .populate("user", "name email");
+  try {
 
-        return res.status(200).json({
-            message: "All orders",
-            orders,
-        });
+    const orders = await orderModel.find();
 
-    } catch (error) {
-        next(error);
-    }
+    return res.status(200).json({
+      success: true,
+      orders,
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
 };
 
 
+// ==============================
+// UPDATE ORDER STATUS
+// ==============================
 const updateOrderStatus = async (req, res, next) => {
-    try {
-        const { status } = req.body;
+  try {
 
-        const validStatus = ["pending", "shipped", "delivered"];
+    const { status } = req.body;
 
-        if (!validStatus.includes(status)) {
-            return res.status(400).json({ message: "Invalid status" });
-        }
+    const validStatus = [
+      "pending",
+      "shipped",
+      "delivered",
+    ];
 
-        const order = await orderModel.findById(req.params.id);
-
-        if (!order) {
-            return res.status(404).json({ message: "Order not found" });
-        }
-
-        order.status = status;
-
-        await order.save();
-
-        return res.status(200).json({
-            message: "Order status updated",
-            order,
-        });
-
-    } catch (error) {
-        next(error);
+    if (!validStatus.includes(status)) {
+      return res.status(400).json({
+        message: "Invalid status",
+      });
     }
+
+    const order = await orderModel.findById(
+      req.params.id
+    );
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
+    }
+
+    order.status = status;
+
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Order updated",
+      order,
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
 };
 
 
 export {
-    createOrder,
-    getMyOrders,
-    getAllOrders,
-    updateOrderStatus
+  createOrder,
+  getMyOrders,
+  getAllOrders,
+  updateOrderStatus,
 };

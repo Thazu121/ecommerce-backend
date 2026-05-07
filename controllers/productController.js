@@ -1,180 +1,202 @@
-import { productModel } from "../models/productModel.js"
+import { productModel } from "../models/productModel.js";
 
-const createProduct = async (req, res, next) => {
-    try {
-        let { name, price, category, description } = req.body;
+/* ================= CREATE PRODUCT ================= */
+export const createProduct = async (req, res, next) => {
+  try {
+    let { name, price, category, description, isPublic } = req.body;
 
-        if (!name || !price || !category || !description) {
-            return res.status(400).json({ message: "All fields required" });
-        }
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
 
-        if (isNaN(price) || price <= 0) {
-            return res.status(400).json({ message: "Invalid price" });
-        }
-
-        name = name.trim().toLowerCase();
-        category = category.trim().toLowerCase();
-
-        const existingProduct = await productModel.findOne({ name, category });
-
-        if (existingProduct) {
-            return res.status(400).json({
-                message: "Product already exists"
-            });
-        }
-
-        const product = await productModel.create({
-            name,
-            price,
-            category,
-            description
-        });
-
-        return res.status(201).json({
-            message: "Product created successfully",
-            product
-        });
-
-    } catch (error) {
-        next(error);
+    // ================= VALIDATION =================
+    if (!name || !price || !category || !description) {
+      return res.status(400).json({
+        message: "All fields required",
+      });
     }
+
+    // convert price properly (IMPORTANT FIX)
+    price = Number(price);
+
+    if (isNaN(price) || price <= 0) {
+      return res.status(400).json({
+        message: "Invalid price",
+      });
+    }
+
+    name = name.trim().toLowerCase();
+    category = category.trim().toLowerCase();
+
+    // ================= DUPLICATE CHECK =================
+    const existing = await productModel.findOne({ name, category });
+
+    if (existing) {
+      return res.status(400).json({
+        message: "Product already exists",
+      });
+    }
+
+    // ================= IMAGE HANDLING =================
+    const image = req.file ? `/uploads/${req.file.filename}` : null;
+
+    // ================= CREATE PRODUCT =================
+    const product = await productModel.create({
+      name,
+      price,
+      category,
+      description,
+      image,
+      isPublic: isPublic !== undefined ? isPublic : true,
+    });
+
+    return res.status(201).json({
+      message: "Product created successfully",
+      product,
+    });
+
+  } catch (error) {
+    console.log("CREATE PRODUCT ERROR:", error);
+    next(error);
+  }
 };
 
+/* ================= GET ALL ================= */
+export const getAllProduct = async (req, res, next) => {
+  try {
+    const isAdmin = req.user?.role === "admin";
 
+    const products = await productModel.find(
+      isAdmin ? {} : { isPublic: true }
+    );
 
-const getAllProduct = async (req, res,next) => {
-    try {
-        const product = await productModel.find()
-        return res.status(200).json({ message: "Product fetched successfully", product })
-    } catch (error) {
-        next(error)
+    return res.status(200).json({
+      message: "Products fetched successfully",
+      product: products,
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* ================= SINGLE ================= */
+export const getSingleProduct = async (req, res, next) => {
+  try {
+    const product = await productModel.findById(req.params.productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product Not Found" });
     }
-}
-const getSingleProduct = async (req, res,next) => {
-    try {
-        const product = await productModel.findById(req.params.productId)
-        if (!product) {
-          return  res.status(404).json({ message: "Product Not Found" })
-        }
-         res.status(200).json({ message: "Product Found", product })
 
-    } catch (error) {
-next(error)
-    }
+    return res.status(200).json({
+      message: "Product Found",
+      product,
+    });
 
-}
+  } catch (error) {
+    next(error);
+  }
+};
 
-const updateProduct = async (req, res, next) => {
-    try {
-        const { name, category } = req.body;
+/* ================= UPDATE ================= */
+export const updateProduct = async (req, res, next) => {
+  try {
+    const { name, category } = req.body;
 
-        if (name && category) {
-            const existingProduct = await productModel.findOne({
-                name: name.trim().toLowerCase(),
-                category: category.trim().toLowerCase(),
-                _id: { $ne: req.params.productId }
-            });
+    if (name && category) {
+      const exists = await productModel.findOne({
+        name: name.trim().toLowerCase(),
+        category: category.trim().toLowerCase(),
+        _id: { $ne: req.params.productId },
+      });
 
-            if (existingProduct) {
-                return res.status(400).json({
-                    message: "Another product with same name and category exists"
-                });
-            }
-        }
-
-        const product = await productModel.findByIdAndUpdate(
-            req.params.productId,
-            { $set: req.body },
-            { new: true, runValidators: true }
-        );
-
-        if (!product) {
-            return res.status(404).json({ message: "Product not found" });
-        }
-
-        res.status(200).json({ message: "Product updated", product });
-
-    } catch (error) {
-        next(error);
-    }
-}
-const deleteProduct=async (req,res,next) => {
-    try {
-        const product=await productModel.findByIdAndDelete(req.params.productId)
-        if (!product){
-            return res.status(404).json({message:"Product not found"})
-        }
-        res.status(200).json({message:"Deleted sucessfully",product})
-    } catch (error) {
-next(error)
-    }
-    
-}
-
-
-
-const filterProduct = async (req, res,next) => {
-    try {
-        const {
-            name,
-            category,
-            minPrice,
-            maxPrice,
-            sort,
-            page = 1,
-            limit = 10,
-        } = req.query
-
-        let query = {}
-
-        if (name) {
-            query.name = { $regex: name, $options: "i" }
-        }
-
-        if (category) {
-            query.category = category
-        }
-
-        if (minPrice || maxPrice) {
-            query.price = {}
-            if (minPrice) query.price.$gte = Number(minPrice)
-            if (maxPrice) query.price.$lte = Number(maxPrice)
-        }
-
-        let productsQuery = productModel.find(query)
-
-        if (sort === "price_asc") {
-            productsQuery = productsQuery.sort({ price: 1 })
-        } else if (sort === "price_desc") {
-            productsQuery = productsQuery.sort({ price: -1 })
-        }
-
-        const pageNumber = Number(page)
-        const limitNumber = Number(limit)
-
-        const skip = (pageNumber - 1) * limitNumber
-
-        productsQuery = productsQuery
-            .skip(skip)
-            .limit(limitNumber)
-
-        const products = await productsQuery
-
-        res.status(200).json({
-            message: "Filtered products",
-            count: products.length,
-            products
+      if (exists) {
+        return res.status(400).json({
+          message: "Duplicate product exists",
         });
-
-    } catch (error) {
-        next(error)
+      }
     }
-}
 
-export {
-    createProduct,
-    getAllProduct,
-    getSingleProduct,
-    updateProduct,
-    deleteProduct,filterProduct
-}
+    const updateData = { ...req.body };
+
+    if (req.file) {
+      updateData.image = `/uploads/${req.file.filename}`;
+    }
+
+    const product = await productModel.findByIdAndUpdate(
+      req.params.productId,
+      { $set: updateData },
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    return res.status(200).json({
+      message: "Updated successfully",
+      product,
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* ================= DELETE ================= */
+export const deleteProduct = async (req, res, next) => {
+  try {
+    const product = await productModel.findByIdAndDelete(
+      req.params.productId
+    );
+
+    if (!product) {
+      return res.status(404).json({ message: "Not found" });
+    }
+
+    return res.status(200).json({
+      message: "Deleted successfully",
+      product,
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* ================= FILTER ================= */
+export const filterProduct = async (req, res, next) => {
+  try {
+    const { name, category, minPrice, maxPrice, sort, page = 1, limit = 10 } =
+      req.query;
+
+    let query = {};
+
+    if (name) query.name = { $regex: name, $options: "i" };
+    if (category) query.category = category;
+
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = Number(minPrice);
+      if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
+
+    let q = productModel.find(query);
+
+    if (sort === "price_asc") q = q.sort({ price: 1 });
+    if (sort === "price_desc") q = q.sort({ price: -1 });
+
+    const skip = (page - 1) * limit;
+
+    const products = await q.skip(skip).limit(limit);
+
+    return res.status(200).json({
+      message: "Filtered products",
+      count: products.length,
+      products,
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
