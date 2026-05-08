@@ -30,10 +30,9 @@ const productSchema = new mongoose.Schema(
       default: "",
     },
 
-    // ✅ NEW FIELD (IMPORTANT)
     isPublic: {
       type: Boolean,
-      default: true, // public by default
+      default: true, 
     },
   },
   { timestamps: true }
