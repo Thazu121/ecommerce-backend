@@ -9,15 +9,13 @@ import {
   updateOrderStatus
 } from "../controllers/orderController.js";
 
-const orderRouter = express.Router()
+const orderRouter = express.Router();
 
+orderRouter.post("/", authMiddleware, roleMiddleware("user"), createOrder);
 
-orderRouter.post("/", authMiddleware,roleMiddleware("user"), createOrder)
-orderRouter.get("/my", authMiddleware,roleMiddleware("user"), getMyOrders)
+orderRouter.get("/my", authMiddleware, roleMiddleware("user"), getMyOrders);
 
-
-orderRouter.get("/", authMiddleware, roleMiddleware("admin"), getAllOrders)
-orderRouter.put("/:id", authMiddleware, roleMiddleware("admin"), updateOrderStatus)
-
+orderRouter.get("/", authMiddleware, roleMiddleware("admin"), getAllOrders);
+orderRouter.put("/:id", authMiddleware, roleMiddleware("admin"), updateOrderStatus);
 
 export default orderRouter;

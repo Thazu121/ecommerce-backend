@@ -5,7 +5,6 @@ import { getAllUsers } from "../controllers/userController.js"
 
 const adminrouter = express.Router();
 
-// ✅ ADMIN ONLY ROUTE
 adminrouter.get(
   "/users",
   authMiddleware,
