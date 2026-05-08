@@ -2,18 +2,14 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-/* =========================
-   CREATE UPLOADS FOLDER
-========================= */
+
 const uploadDir = "uploads/";
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-/* =========================
-   STORAGE CONFIG
-========================= */
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -30,9 +26,7 @@ const storage = multer.diskStorage({
   },
 });
 
-/* =========================
-   FILE FILTER (ONLY IMAGES)
-========================= */
+
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|webp/;
 
@@ -49,9 +43,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-/* =========================
-   MULTER EXPORT
-========================= */
+
 export const upload = multer({
   storage,
   fileFilter,

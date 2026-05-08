@@ -1,6 +1,5 @@
 import { productModel } from "../models/productModel.js";
 
-/* ================= CREATE PRODUCT ================= */
 export const createProduct = async (req, res, next) => {
   try {
     let { name, price, category, description, isPublic } = req.body;
@@ -8,14 +7,12 @@ export const createProduct = async (req, res, next) => {
     console.log("BODY:", req.body);
     console.log("FILE:", req.file);
 
-    // ================= VALIDATION =================
     if (!name || !price || !category || !description) {
       return res.status(400).json({
         message: "All fields required",
       });
     }
 
-    // convert price properly (IMPORTANT FIX)
     price = Number(price);
 
     if (isNaN(price) || price <= 0) {
@@ -27,7 +24,6 @@ export const createProduct = async (req, res, next) => {
     name = name.trim().toLowerCase();
     category = category.trim().toLowerCase();
 
-    // ================= DUPLICATE CHECK =================
     const existing = await productModel.findOne({ name, category });
 
     if (existing) {
@@ -36,10 +32,8 @@ export const createProduct = async (req, res, next) => {
       });
     }
 
-    // ================= IMAGE HANDLING =================
     const image = req.file ? `/uploads/${req.file.filename}` : null;
 
-    // ================= CREATE PRODUCT =================
     const product = await productModel.create({
       name,
       price,
@@ -60,7 +54,6 @@ export const createProduct = async (req, res, next) => {
   }
 };
 
-/* ================= GET ALL ================= */
 export const getAllProduct = async (req, res, next) => {
   try {
     const isAdmin = req.user?.role === "admin";
@@ -79,7 +72,6 @@ export const getAllProduct = async (req, res, next) => {
   }
 };
 
-/* ================= SINGLE ================= */
 export const getSingleProduct = async (req, res, next) => {
   try {
     const product = await productModel.findById(req.params.productId);
@@ -98,7 +90,6 @@ export const getSingleProduct = async (req, res, next) => {
   }
 };
 
-/* ================= UPDATE ================= */
 export const updateProduct = async (req, res, next) => {
   try {
     const { name, category } = req.body;
@@ -143,7 +134,6 @@ export const updateProduct = async (req, res, next) => {
   }
 };
 
-/* ================= DELETE ================= */
 export const deleteProduct = async (req, res, next) => {
   try {
     const product = await productModel.findByIdAndDelete(
@@ -164,7 +154,6 @@ export const deleteProduct = async (req, res, next) => {
   }
 };
 
-/* ================= FILTER ================= */
 export const filterProduct = async (req, res, next) => {
   try {
     const { name, category, minPrice, maxPrice, sort, page = 1, limit = 10 } =
