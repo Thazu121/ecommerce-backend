@@ -22,7 +22,10 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    origin: "https://ecommerce-frontend-theta-bay.vercel.app/",
+    origin: [
+      "http://localhost:5173",
+      "https://ecommerce-frontend-theta-bay.vercel.app",
+    ],
     credentials: true,
   })
 );
