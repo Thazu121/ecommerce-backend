@@ -2,7 +2,6 @@ import { userModel } from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// ================= REGISTER =================
 const registerUser = async (req, res, next) => {
   try {
     let {
@@ -14,18 +13,15 @@ const registerUser = async (req, res, next) => {
       role,
     } = req.body;
 
-    // REQUIRED
     if (!name || !email || !password) {
       return res.status(400).json({
         message: "All fields are required",
       });
     }
 
-    // CLEAN
     name = name.trim();
     email = email.trim().toLowerCase();
 
-    // NAME VALIDATION
     if (name.length < 3) {
       return res.status(400).json({
         message:
@@ -33,7 +29,6 @@ const registerUser = async (req, res, next) => {
       });
     }
 
-    // EMAIL VALIDATION
     const emailRegex =
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -43,7 +38,6 @@ const registerUser = async (req, res, next) => {
       });
     }
 
-    // PASSWORD VALIDATION
     const passwordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
 
@@ -54,7 +48,6 @@ const registerUser = async (req, res, next) => {
       });
     }
 
-    // PHONE VALIDATION
     if (phone) {
       const phoneRegex = /^[0-9]{10}$/;
 
@@ -65,7 +58,6 @@ const registerUser = async (req, res, next) => {
       }
     }
 
-    // ADDRESS VALIDATION
     if (address) {
       const { street, city, pincode } =
         address;
@@ -86,7 +78,6 @@ const registerUser = async (req, res, next) => {
       }
     }
 
-    // EXISTING USER
     const existingUser =
       await userModel.findOne({ email });
 
@@ -96,11 +87,9 @@ const registerUser = async (req, res, next) => {
       });
     }
 
-    // HASH PASSWORD
     const hashedPassword =
       await bcrypt.hash(password, 10);
 
-    // CREATE USER
     const newUser = await userModel.create({
       name,
       email,
@@ -110,7 +99,6 @@ const registerUser = async (req, res, next) => {
       role: role || "user",
     });
 
-    // CREATE TOKEN
     const token = jwt.sign(
       {
         id: newUser._id,
@@ -121,12 +109,10 @@ const registerUser = async (req, res, next) => {
       { expiresIn: "1h" }
     );
 
-    // REMOVE PASSWORD
     const userResponse = newUser.toObject();
 
     delete userResponse.password;
 
-    // RESPONSE
     return res.status(201).json({
       message: "User registered successfully",
       token,
@@ -138,7 +124,6 @@ const registerUser = async (req, res, next) => {
   }
 };
 
-// ================= LOGIN =================
 const loginUser = async (req, res, next) => {
   try {
     let { email, password } = req.body;
